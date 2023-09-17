@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -57,16 +58,27 @@ static const Layout layouts[] = {
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#define VOLUME_UP XF86XK_AudioRaiseVolume
+#define VOLUME_DOWN XF86XK_AudioLowerVolume
+#define BRIGHTNESS_UP XF86XK_MonBrightnessUp
+#define BRIGHTNESS_DOWN XF86XK_MonBrightnessDown
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
 
+static const char lightup[] = {"light -A 10 "};
+static const char lightdown[] = {"light -U 10"};
+static const char voldown[] = {"wpctl set-volume @DEFAULT_SINK@ 2%-"};
+static const char volup[] = {"wpctl set-volume @DEFAULT_SINK@ 2%+"};
+static const char micup[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%+"};
+static const char micdown[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%-"};
+
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-	{ MODKEY,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY|ShiftMask,             XK_b,      toggleextrabar, {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
@@ -102,6 +114,13 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ 0, BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
+	{ 0, BRIGHTNESS_DOWN, spawn, SHCMD(lightdown)},
+	{ 0, VOLUME_UP, spawn, SHCMD(volup)},
+	{ 0, VOLUME_DOWN, spawn, SHCMD(voldown)},
+	{ MODKEY, XK_F2, spawn, SHCMD(micdown)},
+	{ MODKEY, XK_F3, spawn, SHCMD(micup)},
+
 };
 
 /* button definitions */
