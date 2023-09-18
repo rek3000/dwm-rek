@@ -1,1 +1,4 @@
 *.orig
+config.h
+*.o
+dwm

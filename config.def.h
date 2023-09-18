@@ -2,7 +2,7 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
+static const unsigned int borderpx  = 3;        /* border pixel of windows */
 static const unsigned int gappx     = 5;        /* gaps between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int showbar            = 1;        /* 0 means no standard bar */
@@ -68,8 +68,8 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
 
-static const char lightup[] = {"light -A 10 "};
-static const char lightdown[] = {"light -U 10"};
+static const char lightup[] = {"light -A 5 "};
+static const char lightdown[] = {"light -U 5"};
 static const char voldown[] = {"wpctl set-volume @DEFAULT_SINK@ 2%-"};
 static const char volup[] = {"wpctl set-volume @DEFAULT_SINK@ 2%+"};
 static const char micup[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%+"};
