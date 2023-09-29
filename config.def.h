@@ -9,13 +9,13 @@ static const int showbar            = 1;        /* 0 means no standard bar */
 static const int topbar             = 1;        /* 0 means standard bar at bottom */
 static const int extrabar           = 1;        /* 0 means no extra bar */
 static const char statussep         = ';';      /* separator between statuses */
-static const char *fonts[]          = { "monospace:size=12" };
-static const char dmenufont[]       = "monospace:size=12";
+static const char *fonts[]          = { "Rursus Compact Mono:size=12" };
+static const char dmenufont[]       = "Rursus Compact Mono:size=12";
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#bbbbbb";
 static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
+static const char col_cyan[]        = "#96C291";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
@@ -60,20 +60,23 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 #define VOLUME_UP XF86XK_AudioRaiseVolume
 #define VOLUME_DOWN XF86XK_AudioLowerVolume
+#define VOLUME_MUTE XF86XK_AudioMute
 #define BRIGHTNESS_UP XF86XK_MonBrightnessUp
 #define BRIGHTNESS_DOWN XF86XK_MonBrightnessDown
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "kitty", NULL };
+static const char *termcmd[]  = { "alacritty", NULL };
 
 static const char lightup[] = {"light -A 5 "};
 static const char lightdown[] = {"light -U 5"};
 static const char voldown[] = {"wpctl set-volume @DEFAULT_SINK@ 2%-"};
 static const char volup[] = {"wpctl set-volume @DEFAULT_SINK@ 2%+"};
+static const char volmute[] = {"wpctl set-mute @DEFAULT_SINK@ toggle"};
 static const char micup[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%+"};
 static const char micdown[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%-"};
+static const char micmute[] = {"wpctl set-mute @DEFAULT_SOURCE@ toggle"};
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -114,10 +117,16 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-	{ 0, BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
 	{ 0, BRIGHTNESS_DOWN, spawn, SHCMD(lightdown)},
+	{ 0, BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
+	{ MODKEY, XK_F11, spawn, SHCMD(lightdown)},
+	{ MODKEY, XK_F12, spawn,  SHCMD(lightup)},
+
 	{ 0, VOLUME_UP, spawn, SHCMD(volup)},
 	{ 0, VOLUME_DOWN, spawn, SHCMD(voldown)},
+	{ 0, VOLUME_MUTE, spawn, SHCMD(volmute)},
+
+	{ MODKEY, XK_F1, spawn, SHCMD(micmute)},
 	{ MODKEY, XK_F2, spawn, SHCMD(micdown)},
 	{ MODKEY, XK_F3, spawn, SHCMD(micup)},
 
