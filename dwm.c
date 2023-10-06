@@ -41,6 +41,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
+#include <pango/pango.h>
 
 #include "drw.h"
 #include "util.h"
@@ -56,7 +57,8 @@
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
 #define TAGMASK                 ((1 << LENGTH(tags)) - 1)
-#define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define TEXTW(X)                (drw_font_getwidth(drw, (X), False) + lrpad)
+#define TEXTWM(X)               (drw_font_getwidth(drw, (X), True) + lrpad)
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
@@ -249,7 +251,7 @@ static const char autostartsh[] = "autostart.sh";
 static const char broken[] = "broken";
 static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
-static char stext[256];
+static char stext[512];
 static char estextl[256];
 static char estextr[256];
 static int screen;
@@ -456,7 +458,7 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext))
+		else if (ev->x > selmon->ww - (int)TEXTWM(stext))
 			click = ClkStatusText;
 		else
 			click = ClkWinTitle;
@@ -726,8 +728,8 @@ void
 drawbar(Monitor *m)
 {
 	int x, w, tw = 0, etwl = 0, etwr = 0;
-	int boxs = drw->fonts->h / 9;
-	int boxw = drw->fonts->h / 6 + 2;
+	int boxs = drw->font->h / 9;
+	int boxw = drw->font->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
 
@@ -737,8 +739,8 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+		tw = TEXTWM(stext) - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0, True);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -750,7 +752,7 @@ drawbar(Monitor *m)
 	for (i = 0; i < LENGTH(tags); i++) {
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i, False);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
@@ -759,12 +761,12 @@ drawbar(Monitor *m)
 	}
 	w = TEXTW(m->ltsymbol);
 	drw_setscheme(drw, scheme[SchemeNorm]);
-	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0, False);
 
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0, False);
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
@@ -779,9 +781,9 @@ drawbar(Monitor *m)
 		/* clear default bar draw buffer by drawing a blank rectangle */
 		drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
 		etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0);
+		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
 		etwl = TEXTW(estextl);
-		drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0);
+		drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
 		drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
 	}
 }
@@ -1684,10 +1686,10 @@ setup(void)
 	sh = DisplayHeight(dpy, screen);
 	root = RootWindow(dpy, screen);
 	drw = drw_create(dpy, screen, root, sw, sh);
-	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
+	if (!drw_font_create(drw, font))
 		die("no fonts could be loaded.");
-	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 2;
+	lrpad = drw->font->h;
+	bh = drw->font->h + 2;
 	updategeom();
 	/* init atoms */
 	utf8string = XInternAtom(dpy, "UTF8_STRING", False);

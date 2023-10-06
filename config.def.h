@@ -11,7 +11,7 @@ static const int extrabar           = 1;        /* 0 means no extra bar */
 static const char statussep         = ';';      /* separator between statuses */
 //static const char *fonts[]          = { "Rursus Compact Mono:size=12" };
 //static const char dmenufont[]       = "Rursus Compact Mono:size=12";
-static const char *fonts[]          = { "monospace:size=12" };
+static const char font[]          = "monospace 12";
 static const char dmenufont[]       = "monospace:size=12";
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#444444";
