@@ -252,8 +252,8 @@ static const char broken[] = "broken";
 static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
 static char stext[512];
-static char estextl[256];
-static char estextr[256];
+static char estextl[512];
+static char estextr[512];
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh;               /* bar height */
@@ -780,10 +780,10 @@ drawbar(Monitor *m)
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		/* clear default bar draw buffer by drawing a blank rectangle */
 		drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
-		etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
-		etwl = TEXTW(estextl);
+		etwl = TEXTWM(estextl);
 		drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
+		etwr = TEXTWM(estextr) - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
 		drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
 	}
 }
