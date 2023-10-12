@@ -1,0 +1,44 @@
+#!/bin/sh
+while true
+do
+  # TOP BAR
+  date=$(date '+%H:%M')
+  date="<span baseline_shift='5pt' weight='bold' foreground='#FFF5E0' background='#186F65'>$date</span>"
+  top="$date"
+  #####
+
+  # BOTTOM BAR
+  ## LEFT 
+	batprompt="<span foreground='#444444' background='#96C291' style='normal'>BAT</span>"
+  batcap=$(cat /sys/class/power_supply/BAT0/capacity)
+  batstat=$(cat /sys/class/power_supply/BAT0/status)
+  if [[ $batstat = "Charging" ]]
+  then
+    batstat="+"  
+  elif [[ $batstat = "Full" ]]
+  then
+    batstat="="
+  else
+    batstat="-"
+  fi
+  batstat="<span size='70%' weight='bold' rise='2pt' background='teal'>[$batstat]</span>"
+  if [[ $batcap -gt 30 ]]; then
+    batcap="<span weight='bold' background='green'>$batcap</span>"
+  else
+    batcap="<span weight='bold' background='crimson'>$batcap</span>"
+  fi
+  bat="$batprompt$batcap$batstat"
+
+  bottomleft=$bat
+  ##
+  ## RIGHT
+  text="<span color='salmon' size='70%' style='italic'>memento mori</span>"
+  text=$text
+  # debug="SECOND: $(date '+%S')"
+  bottomright=$text$debug
+  ##
+  #####
+  
+	xsetroot -name "$top|$bottomleft|$bottomright"
+	sleep 30
+done 
