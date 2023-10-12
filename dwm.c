@@ -740,7 +740,6 @@ drawbar(Monitor *m)
     /* draw status first so it can be overdrawn by tags later */
     if (m == selmon) { /* status is only drawn on selected monitor */
       drw_setscheme(drw, scheme[SchemeNorm]);
-      // tw = TEXTWM(stext) - lrpad + 2; /* 2px right padding */
       tw = TEXTWM(stext) - lrpad; /* 2px right padding */
       drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0, True);
     }
@@ -783,9 +782,7 @@ drawbar(Monitor *m)
       /* clear default bar draw buffer by drawing a blank rectangle */
       drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
       etwl = TEXTWM(estextl);
-      // drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
       drw_text(drw, 2, 0, etwl, bh, 0, estextl, 0, True); /* 2px right padding */
-      // etwr = TEXTWM(estextr) - lrpad; /* 2px right padding */
       etwr = TEXTWM(estextr) - lrpad + 2; /* 2px right padding */
       drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
       drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
@@ -797,9 +794,7 @@ drawbar(Monitor *m)
       /* clear default bar draw buffer by drawing a blank rectangle */
       drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
       etwl = TEXTWM(estextl);
-      // drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
       drw_text(drw, 2, 0, etwl, bh, 0, estextl, 0, True); /* 2px right padding */
-      // etwr = TEXTWM(estextr) - lrpad; /* 2px right padding */
       etwr = TEXTWM(estextr) - lrpad + 2; /* 2px right padding */
       drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
       drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
@@ -871,7 +866,7 @@ focus(Client *c)
 }
 
 /* there are some broken focus acquiring clients needing extra handling */
-  void
+void
 focusin(XEvent *e)
 {
   XFocusChangeEvent *ev = &e->xfocus;
