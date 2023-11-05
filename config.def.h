@@ -79,6 +79,7 @@ static const char volmute[] = {"wpctl set-mute @DEFAULT_SINK@ toggle"};
 static const char micup[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%+"};
 static const char micdown[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%-"};
 static const char micmute[] = {"wpctl set-mute @DEFAULT_SOURCE@ toggle"};
+static const char powermenu[] = {"power_option"};
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -119,6 +120,7 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ ControlMask|Mod1Mask,             XK_Delete,      spawn,           SHCMD(powermenu) },
 	{ 0, BRIGHTNESS_DOWN, spawn, SHCMD(lightdown)},
 	{ 0, BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
 	{ MODKEY, XK_F11, spawn, SHCMD(lightdown)},
