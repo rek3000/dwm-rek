@@ -21,6 +21,7 @@
  * To understand everything else, start reading main().
  */
 #include <X11/Xatom.h>
+#include <X11/Xft/Xft.h>
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
@@ -28,6 +29,7 @@
 #include <X11/keysym.h>
 #include <errno.h>
 #include <locale.h>
+#include <pango/pango.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -40,10 +42,8 @@
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
-#include <X11/Xft/Xft.h>
-#include "util.h"
-#include <pango/pango.h>
 #include "drw.h"
+#include "util.h"
 
 /* macros */
 #define BUTTONMASK (ButtonPressMask | ButtonReleaseMask)
@@ -170,6 +170,7 @@ struct Monitor {
   int eby;            /* extra bar geometry */
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
+  int gappx;
   unsigned int seltags;
   unsigned int sellt;
   unsigned int tagset[2];
@@ -267,6 +268,7 @@ static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
+static void setgaps(const Arg *arg);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
@@ -781,6 +783,7 @@ Monitor *createmon(void) {
   m->showbar = showbar;
   m->topbar = topbar;
   m->extrabar = extrabar;
+  m->gappx = gappx;
   m->lt[0] = &layouts[0];
   m->lt[1] = &layouts[1 % LENGTH(layouts)];
   strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
@@ -1084,9 +1087,6 @@ void drawbar(Monitor *m) {
     stw = getsystraywidth();
   /* draw status first so it can be overdrawn by tags later */
   if (m == selmon) { /* status is only drawn on selected monitor */
-    // drw_setscheme(drw, scheme[SchemeNorm]);
-    // tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-    // drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
     tw = m->ww - drawstatusbar(m, bh, stext, True);
   }
 
@@ -1124,7 +1124,6 @@ void drawbar(Monitor *m) {
       drw_rect(drw, x, 0, w, bh, 1, 1);
     }
   }
-  // drw_map(drw, m->barwin, 0, 0, m->ww, bh);
   drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 
   if (m == selmon) { /* extra status is only drawn on selected monitor */
@@ -2012,6 +2011,14 @@ void setfullscreen(Client *c, int fullscreen) {
   }
 }
 
+void setgaps(const Arg *arg) {
+  if ((arg->i == 0) || (selmon->gappx + arg->i < 0))
+    selmon->gappx = 0;
+  else
+    selmon->gappx += arg->i;
+  arrange(selmon);
+}
+
 void setlayout(const Arg *arg) {
   if (!arg || !arg->v || arg->v != selmon->lt[selmon->sellt])
     selmon->sellt ^= 1;
@@ -2204,20 +2211,21 @@ void tile(Monitor *m) {
   if (n > m->nmaster)
     mw = m->nmaster ? m->ww * m->mfact : 0;
   else
-    mw = m->ww;
-  for (i = my = ty = 0, c = nexttiled(m->clients); c;
+    mw = m->ww - m->gappx;
+  for (i = 0, my = ty = m->gappx, c = nexttiled(m->clients); c;
        c = nexttiled(c->next), i++)
     if (i < m->nmaster) {
-      h = (m->wh - my) / (MIN(n, m->nmaster) - i);
-      resize(c, m->wx, m->wy + my, mw - (2 * c->bw), h - (2 * c->bw), 0);
-      if (my + HEIGHT(c) < m->wh)
-        my += HEIGHT(c);
-    } else {
-      h = (m->wh - ty) / (n - i);
-      resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2 * c->bw),
+      h = (m->wh - my) / (MIN(n, m->nmaster) - i) - m->gappx;
+      resize(c, m->wx + m->gappx, m->wy + my, mw - (2 * c->bw) - m->gappx,
              h - (2 * c->bw), 0);
-      if (ty + HEIGHT(c) < m->wh)
-        ty += HEIGHT(c);
+      if (my + HEIGHT(c) + m->gappx < m->wh)
+        my += HEIGHT(c) + m->gappx;
+    } else {
+      h = (m->wh - ty) / (n - i) - m->gappx;
+      resize(c, m->wx + mw + m->gappx, m->wy + ty,
+             m->ww - mw - (2 * c->bw) - 2 * m->gappx, h - (2 * c->bw), 0);
+      if (ty + HEIGHT(c) + m->gappx < m->wh)
+        ty += HEIGHT(c) + m->gappx;
     }
 }
 
