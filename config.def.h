@@ -9,8 +9,12 @@ static const int showbar            = 1;        /* 0 means no standard bar */
 static const int topbar             = 1;        /* 0 means standard bar at bottom */
 static const int extrabar           = 1;        /* 0 means no extra bar */
 static const char statussep         = ';';      /* separator between statuses */
-//static const char *fonts[]          = { "Rursus Compact Mono:size=12" };
-//static const char dmenufont[]       = "Rursus Compact Mono:size=12";
+static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
+static const unsigned int systrayonleft  = 0;   /* 0: systray in the right corner, >0: systray on left of status text */
+static const unsigned int systrayspacing = 2;   /* systray spacing */
+static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
+static const int showsystray        = 1;        /* 0 means no systray */
+
 static const char *fonts[]          = {"monospace 12"};
 static const char dmenufont[]       = "monospace:size=12";
 static const char col_gray1[]       = "#222222";
@@ -149,6 +153,8 @@ static const Button buttons[] = {
 	{ ClkExBarLeftStatus,   0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkExBarMiddle,       0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkExBarRightStatus,  0,              Button2,        spawn,          {.v = termcmd } },
+  { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
+ 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
