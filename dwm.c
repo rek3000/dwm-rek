@@ -41,9 +41,9 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
+#include "util.h"
 #include <pango/pango.h>
 #include "drw.h"
-#include "util.h"
 
 /* macros */
 #define BUTTONMASK (ButtonPressMask | ButtonReleaseMask)
@@ -61,8 +61,8 @@
 #define HEIGHT(X) ((X)->h + 2 * (X)->bw)
 #define TAGMASK ((1 << LENGTH(tags)) - 1)
 // #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
-#define TEXTW(X)                (drw_font_getwidth(drw, (X), False) + lrpad)
-#define TEXTWM(X)               (drw_font_getwidth(drw, (X), True) + lrpad)
+#define TEXTW(X) (drw_font_getwidth(drw, (X), False) + lrpad)
+#define TEXTWM(X) (drw_font_getwidth(drw, (X), True) + lrpad)
 
 #define SYSTEM_TRAY_REQUEST_DOCK 0
 /* XEMBED messages */
@@ -948,6 +948,128 @@ int drawstatusbar(Monitor *m, int bh, char *stext, Bool markup) {
   return ret;
 }
 
+int drawextrastatusbar(Monitor *m, int bh, char *stext, Bool isleft,
+                       Bool markup) {
+  int ret, i, w, x, len;
+  short isCode = 0;
+  char *text;
+  char *p;
+
+  len = strlen(stext) + 1;
+  // len = TEXTW(stext) + 1;
+  if (!(text = (char *)malloc(sizeof(char) * len)))
+    die("malloc");
+  p = text;
+  memcpy(text, stext, len);
+
+  /* compute width of the status text */
+  w = 0;
+  x = 0;
+  i = -1;
+  while (text[++i]) {
+    if (text[i] == '^') {
+      if (!isCode) {
+        isCode = 1;
+        text[i] = '\0';
+        w += TEXTWM(text) - lrpad;
+        text[i] = '^';
+        if (text[++i] == 'f')
+          w += atoi(text + ++i);
+      } else {
+        isCode = 0;
+        text = text + i + 1;
+        i = -1;
+      }
+    }
+  }
+  if (!isCode)
+    w += TEXTWM(text) - lrpad;
+  else
+    isCode = 0;
+  text = p;
+
+  w += 2; /* 1px padding on both sides */
+  ret = m->ww - w;
+  if (!isleft) {
+    x = m->ww - w;
+  }
+
+  drw_setscheme(drw, scheme[LENGTH(colors)]);
+  drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
+  drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+  // drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
+  // drw_rect(drw, x, 0, w, bh, 1, 1);
+  x++;
+
+  /* process status text */
+  i = -1;
+  while (text[++i]) {
+    if (text[i] == '^' && !isCode) {
+      isCode = 1;
+
+      text[i] = '\0';
+      // drw_text(drw, x, 0, w, bh, 0, text, 0, markup);
+      w = TEXTWM(text) - lrpad;
+      drw_text(drw, x, 0, w, bh, 0, text, 0, markup);
+      x += w;
+
+      /* process code */
+      while (text[++i] != '^') {
+        if (text[i] == 'c') {
+          char buf[8];
+          memcpy(buf, (char *)text + i + 1, 7);
+          buf[7] = '\0';
+          drw_clr_create(drw, &drw->scheme[ColFg], buf);
+          i += 7;
+        } else if (text[i] == 'b') {
+          char buf[8];
+          memcpy(buf, (char *)text + i + 1, 7);
+          buf[7] = '\0';
+          drw_clr_create(drw, &drw->scheme[ColBg], buf);
+          i += 7;
+        } else if (text[i] == 'd') {
+          drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
+          drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+        } else if (text[i] == 'r') {
+          int rx = atoi(text + ++i);
+          while (text[++i] != ',')
+            ;
+          int ry = atoi(text + ++i);
+          while (text[++i] != ',')
+            ;
+          int rw = atoi(text + ++i);
+          while (text[++i] != ',')
+            ;
+          int rh = atoi(text + ++i);
+
+          drw_rect(drw, rx + x, ry, rw, rh, 1, 0);
+        } else if (text[i] == 'f') {
+          x += atoi(text + ++i);
+        }
+      }
+
+      text = text + i + 1;
+      i = -1;
+      isCode = 0;
+    }
+  }
+
+  if (!isCode) {
+    w = TEXTWM(text) - lrpad;
+    // if (isleft) {
+    //   drw_text(drw, 0, 0, w, bh, 0, text, 0, markup);
+    // } else {
+    //   drw_text(drw, x, 0, w, bh, 0, text, 0, markup);
+    // }
+    drw_text(drw, x, 0, w, bh, 0, text, 0, markup);
+  }
+
+  drw_setscheme(drw, scheme[SchemeNorm]);
+  free(p);
+
+  return ret;
+}
+
 void drawbar(Monitor *m) {
   int x, w, tw = 0, etwl = 0, etwr = 0, stw = 0;
   int boxs = drw->font->h / 9;
@@ -1006,13 +1128,15 @@ void drawbar(Monitor *m) {
   drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 
   if (m == selmon) { /* extra status is only drawn on selected monitor */
-    drw_setscheme(drw, scheme[SchemeNorm]);
     /* clear default bar draw buffer by drawing a blank rectangle */
+    drw_setscheme(drw, scheme[SchemeNorm]);
     drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
-    etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
-    drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
-    etwl = TEXTW(estextl);
-    drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
+    drawextrastatusbar(m, bh, estextl, True, True);
+    drawextrastatusbar(m, bh, estextr, False, True);
+    // etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
+    // drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0, True);
+    // etwl = TEXTW(estextl);
+    // drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0, True);
     drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
   }
 }
@@ -1137,8 +1261,8 @@ Atom getatomprop(Client *c, Atom prop) {
   if (prop == xatom[XembedInfo])
     req = xatom[XembedInfo];
 
-  if (XGetWindowProperty(dpy, c->win, prop, 0L, sizeof atom, False, req,
-                         &da, &di, &dl, &dl, &p) == Success &&
+  if (XGetWindowProperty(dpy, c->win, prop, 0L, sizeof atom, False, req, &da,
+                         &di, &dl, &dl, &p) == Success &&
       p) {
     atom = *(Atom *)p;
     if (da == xatom[XembedInfo] && dl == 2)
