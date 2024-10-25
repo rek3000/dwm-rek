@@ -2,12 +2,12 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 3;        /* border pixel of windows */
+static const unsigned int borderpx  = 5;        /* border pixel of windows */
 static const unsigned int gappx     = 5;        /* gaps between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int showbar            = 1;        /* 0 means no standard bar */
 static const int topbar             = 1;        /* 0 means standard bar at bottom */
-static const int extrabar           = 1;        /* 0 means no extra bar */
+static const int extrabar           = 0;        /* 0 means no extra bar */
 static const char statussep         = ';';      /* separator between statuses */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft  = 0;   /* 0: systray in the right corner, >0: systray on left of status text */
@@ -15,8 +15,8 @@ static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray        = 1;        /* 0 means no systray */
 
-static const char font[]            = "monospace 12";
-static const char dmenufont[]       = "monospace:size=12";
+static const char font[]            = "Agave Nerd Font Mono 18";
+static const char dmenufont[]       = "Agave Nerd Font Mono:size=18";
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#bbbbbb";
@@ -77,14 +77,16 @@ static const char *termcmd[]  = { "alacritty", NULL };
 
 static const char lightup[] = {"light -A 5 "};
 static const char lightdown[] = {"light -U 5"};
-static const char voldown[] = {"/home/rek/.local/bin/volume.sh down"};
-static const char volup[] = {"/home/rek/.local/bin/volume.sh up"};
-static const char volmute[] = {"/home/rek/.local/bin/volume.sh mute"};
+static const char volup[] = {"wpctl set-volume @DEFAULT_SINK@ 2%+"};
+static const char voldown[] = {"wpctl set-volume @DEFAULT_SINK@ 2%-"};
+static const char volmute[] = {"wpctl set-mute @DEFAULT_SINK@ toggle"};
 static const char micup[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%+"};
 static const char micdown[] = {"wpctl set-volume @DEFAULT_SOURCE@ 2%-"};
 static const char micmute[] = {"wpctl set-mute @DEFAULT_SOURCE@ toggle"};
 static const char powermenu[] = {"power_option"};
-static const char filemanager[] = {"thunar"};
+static const char filemanager[] = {"pcmanfm"};
+static const char screenshot_full[] = {"maim | xclip -selection clipboard -t image/png"}; // Full screen to clipboard
+static const char screenshot_select[] = {"maim -s | xclip -selection clipboard -t image/png"}; // Selected area to clipboard
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -125,16 +127,19 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-	{ ControlMask|Mod1Mask,             XK_Delete,      spawn,           SHCMD(powermenu) },
-	{ MODKEY,                       XK_e,  spawn,        SHCMD(filemanager) },
-	{ 0, BRIGHTNESS_DOWN, spawn, SHCMD(lightdown)},
-	{ 0, BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
+	{ ControlMask|Mod1Mask,         XK_Delete, spawn,           SHCMD(powermenu) },
+	{ MODKEY,                       XK_e,      spawn,        SHCMD(filemanager) },
+
+	{ 0,                            BRIGHTNESS_DOWN, spawn, SHCMD(lightdown)},
+	{ 0,                            BRIGHTNESS_UP, spawn,  SHCMD(lightup)},
 	{ MODKEY, XK_F11, spawn, SHCMD(lightdown)},
 	{ MODKEY, XK_F12, spawn,  SHCMD(lightup)},
 
 	{ 0, VOLUME_UP, spawn, SHCMD(volup)},
 	{ 0, VOLUME_DOWN, spawn, SHCMD(voldown)},
 	{ 0, VOLUME_MUTE, spawn, SHCMD(volmute)},
+  { 0, XK_Print, spawn, SHCMD(screenshot_full) },
+  { ShiftMask, XK_Print, spawn, SHCMD(screenshot_select) },
 
 	{ MODKEY, XK_F1, spawn, SHCMD(micmute)},
 	{ MODKEY, XK_F2, spawn, SHCMD(micdown)},
